@@ -11,9 +11,11 @@ export default function Application() {
   const [day, setDay] = useState("Monday");
   const [days, setDays] = useState(daysData);
   const [appointments, setAppointments] = useState(appointmentsData);
+
   function bookInterview(id, interview) {
     console.log(id, interview);
     const isEdit = appointments[id].interview;
+
     setAppointments((prev) => {
       const appointment = {
         ...prev[id],
@@ -25,6 +27,7 @@ export default function Application() {
       };
       return appointments;
     });
+
     if (!isEdit) {
       setDays((prev) => {
         const updatedDay = {
@@ -39,6 +42,7 @@ export default function Application() {
       });
     }
   }
+
   function cancelInterview(id) {
     setAppointments((prev) => {
       const updatedAppointment = {
@@ -51,6 +55,7 @@ export default function Application() {
       };
       return appointments;
     });
+
     setDays((prev) => {
       const updatedDay = {
         ...prev[day],
@@ -62,6 +67,7 @@ export default function Application() {
       };
       return days;
     });
+    
   }
   return (
     <main className="layout">
