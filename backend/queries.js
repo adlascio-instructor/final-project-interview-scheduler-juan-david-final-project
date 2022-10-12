@@ -2,6 +2,9 @@
 
 const getData = "SELECT * FROM " //change when database name is defined 
 
+const getDays = "SELECT * FROM days"
+
 module.exports = {
-  getData
+  getData,
+  getDays
 }
