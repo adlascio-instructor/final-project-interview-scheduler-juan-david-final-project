@@ -1,13 +1,12 @@
 -- Create database 
 -- in terminal type psql 
 -- CREATE DATABSE final_project_interview;
--- check with \l if databse created, if yes connect to db with |c final_project_interview
+-- check with \l if databse created, if yes connect to db with \c final_project_interview
 --\i psql_migration/tables.sql to create tables
 
 CREATE TABLE days (
     id SERIAL PRIMARY KEY,
-    name TEXT,
-    day_id INTEGER REFERENCES days(id) ON DELETE CASCADE
+    name TEXT
 );
 
 CREATE TABLE appointments (
