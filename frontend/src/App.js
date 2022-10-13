@@ -84,9 +84,13 @@ export default function Application() {
       </section>
       <section className="schedule">
         {Object.values(appointments).map((appointment) => (
+          
           <Appointment
+            day={day}
             key={appointment.id}
-            {...appointment}
+            time = {appointment.time}
+            id={appointment.id}
+            interview={appointment.interview || null}
             bookInterview={(interview) =>
               bookInterview(appointment.id, interview)
             }
