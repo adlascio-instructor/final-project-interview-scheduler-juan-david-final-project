@@ -46,6 +46,12 @@ const getDays = (req, res) => {
   });
 };
 
+const getRemainingSpots = (req, res) => {
+  pool.query(queries.getRemainingSpots, (error, result) => {
+    if (error) throw error;
+    res.status(200).json(result.rows);
+  });
+};
 
 module.exports = {
   getDays,
@@ -53,4 +59,5 @@ module.exports = {
   getAppointments,
   postAppointment,
   deleteAppointment,
+  getRemainingSpots
 };

@@ -11,5 +11,6 @@ router.get("/interviewers/:dayOfWeek", controller.getInterviewers);
 router.get("/appointments/:dayOfWeek", controller.getAppointments);
 router.post("/appointment", controller.postAppointment);
 router.post('/deleteAppointment', controller.deleteAppointment);
+router.get('/remainingSpots', controller.getRemainingSpots);
 
 module.exports = router;
