@@ -22,7 +22,6 @@ const Appointment = (props) => {
     fetch(`http://localhost:8000/interviewers/${dayOfWeek}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data)
         setInterviewers(data);
       });
   }, [dayOfWeek]);
@@ -54,6 +53,7 @@ const Appointment = (props) => {
             student={props.interview.student}
             interviewer={props.interview.interviewer}
             interviewers={interviewers}
+            appointment_id={props.id}
             onSave={save}
             onCancel={() => setEdit(false)}
           />
@@ -69,6 +69,7 @@ const Appointment = (props) => {
       ) : add ? (
         <Form
           interviewers={interviewers}
+          appointment_id={props.id}
           onSave={save}
           onCancel={() => setAdd(false)}
         />
