@@ -107,41 +107,46 @@ export default function Application() {
     }
   }
 
-	function cancelInterview(id) {
-		fetch("http://localhost:8000/deleteAppointment", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				appointment_id: id,
-			}),
-		});
+  function cancelInterview(id) {
+    fetch("http://localhost:8000/deleteAppointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        appointment_id: id,
+      }),
+    });
 
-		setAppointments((prev) => {
-			const updatedAppointment = {
-				...prev[id],
-				interview: null,
-			};
-			const appointments = {
-				...prev,
-				[id]: updatedAppointment,
-			};
-			return appointments;
-		});
+    setAppointments((prev) => {
+      const updatedAppointment = {
+        ...prev[id],
+        interview: null,
+      };
+      const appointments = {
+        ...prev,
+        [id]: updatedAppointment,
+      };
+      socket.emit("send-appoinments", {
+        appointments,
+        day,
+      });
+      return appointments;
+    });
 
-		setDays((prev) => {
-			const updatedDay = {
-				...prev[day],
-				spots: prev[day].spots + 1,
-			};
-			const days = {
-				...prev,
-				[day]: updatedDay,
-			};
-			return days;
-		});
-	}
+    setDays((prev) => {
+      const updatedDay = {
+        ...prev[day],
+        spots: prev[day].spots + 1,
+      };
+      const days = {
+        ...prev,
+        [day]: updatedDay,
+      };
+      return days;
+    });
+  }
+  
 	return (
 		<main className="layout">
 			<section className="sidebar">
