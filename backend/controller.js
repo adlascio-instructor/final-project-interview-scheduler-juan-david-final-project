@@ -39,9 +39,25 @@ const deleteAppointment = (req, res) => {
   });
 };
 
+const getDays = (req, res) => {
+  pool.query(queries.getDays, (error, result) => {
+    if (error) throw error;
+    res.status(200).json(result.rows);
+  });
+};
+
+const getRemainingSpots = (req, res) => {
+  pool.query(queries.getRemainingSpots, (error, result) => {
+    if (error) throw error;
+    res.status(200).json(result.rows);
+  });
+};
+
 module.exports = {
+  getDays,
   getInterviewers,
   getAppointments,
   postAppointment,
   deleteAppointment,
+  getRemainingSpots
 };

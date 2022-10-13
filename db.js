@@ -2,10 +2,10 @@ const Pool = require('pg').Pool
 
 //Edit database name after defining, and password for psql 
 const pool = new Pool({
-  user: "jccifuentes21",
+  user: "dawe",
   host: "localhost",
   database: "final_project_interview",
-  password: "postgres",
+  password: "",
   port: 5432,
 });
 
