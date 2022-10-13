@@ -1,16 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import "./App.scss";
 
 import DayList from "./components/DayList";
 import Appointment from "./components/Appointment";
 import daysData from "./components/__mocks__/days.json";
-import appointmentsData from "./components/__mocks__/appointments.json";
 
 export default function Application() {
   const [day, setDay] = useState("Monday");
   const [days, setDays] = useState(daysData);
-  const [appointments, setAppointments] = useState(appointmentsData);
+  const [appointments, setAppointments] = useState({});
+
+  useEffect(() => {
+    const formattedData = {}
+    fetch(`http://localhost:8000/appointments/${day}`)
+      .then((result) => result.json())
+      .then((data) => {
+        // console.log(data)
+        data.forEach((appointment) =>{
+          formattedData[appointment.id] = {
+            id : appointment.id,
+            time : appointment.time,
+            interview : appointment.student ? {
+              student : appointment.student,
+              interviewer : {
+                id: appointment.interviewer_id,
+                name: appointment.interviewer,
+                avatar: appointment.avatar
+              }
+            } : null
+          }
+        })    
+        setAppointments(formattedData);
+      });
+  }, [day]);
 
   function bookInterview(id, interview) {
     console.log(id, interview);
@@ -44,6 +67,16 @@ export default function Application() {
   }
 
   function cancelInterview(id) {
+    fetch('http://localhost:8000/deleteAppointment', {
+      method: 'POST',
+      headers :{
+        'Content-Type' : 'application/json'
+      },
+      body: JSON.stringify({
+        appointment_id: id
+      })
+    })
+
     setAppointments((prev) => {
       const updatedAppointment = {
         ...prev[id],
@@ -67,7 +100,6 @@ export default function Application() {
       };
       return days;
     });
-    
   }
   return (
     <main className="layout">
@@ -85,8 +117,11 @@ export default function Application() {
       <section className="schedule">
         {Object.values(appointments).map((appointment) => (
           <Appointment
+            day={day}
             key={appointment.id}
-            {...appointment}
+            time={appointment.time}
+            id={appointment.id}
+            interview={appointment.interview || null}
             bookInterview={(interview) =>
               bookInterview(appointment.id, interview)
             }
