@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 
 import "./App.scss";
 
@@ -6,31 +7,44 @@ import DayList from "./components/DayList";
 import Appointment from "./components/Appointment";
 import daysData from "./components/__mocks__/days.json";
 
+const socket = io("http://localhost:8080");
+
 export default function Application() {
   const [day, setDay] = useState("Monday");
   const [days, setDays] = useState(daysData);
   const [appointments, setAppointments] = useState({});
 
   useEffect(() => {
-    const formattedData = {}
+    socket.on("get-appointments", (obj) => {
+      console.log("new data received");
+      if (obj.day === day) {
+        console.log(obj.day, day);
+        setAppointments(obj.appointments);
+      }
+    });
+  }, [day]);
+
+  useEffect(() => {
+    const formattedData = {};
     fetch(`http://localhost:8000/appointments/${day}`)
       .then((result) => result.json())
       .then((data) => {
-        // console.log(data)
-        data.forEach((appointment) =>{
+        data.forEach((appointment) => {
           formattedData[appointment.id] = {
-            id : appointment.id,
-            time : appointment.time,
-            interview : appointment.student ? {
-              student : appointment.student,
-              interviewer : {
-                id: appointment.interviewer_id,
-                name: appointment.interviewer,
-                avatar: appointment.avatar
-              }
-            } : null
-          }
-        })    
+            id: appointment.id,
+            time: appointment.time,
+            interview: appointment.student
+              ? {
+                  student: appointment.student,
+                  interviewer: {
+                    id: appointment.interviewer_id,
+                    name: appointment.interviewer,
+                    avatar: appointment.avatar,
+                  },
+                }
+              : null,
+          };
+        });
         setAppointments(formattedData);
       });
   }, [day]);
@@ -48,6 +62,10 @@ export default function Application() {
         ...prev,
         [id]: appointment,
       };
+      socket.emit("send-appoinments", {
+        appointments,
+        day,
+      });
       return appointments;
     });
 
@@ -67,15 +85,15 @@ export default function Application() {
   }
 
   function cancelInterview(id) {
-    fetch('http://localhost:8000/deleteAppointment', {
-      method: 'POST',
-      headers :{
-        'Content-Type' : 'application/json'
+    fetch("http://localhost:8000/deleteAppointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        appointment_id: id
-      })
-    })
+        appointment_id: id,
+      }),
+    });
 
     setAppointments((prev) => {
       const updatedAppointment = {
@@ -86,6 +104,10 @@ export default function Application() {
         ...prev,
         [id]: updatedAppointment,
       };
+      socket.emit("send-appoinments", {
+        appointments,
+        day,
+      });
       return appointments;
     });
 
