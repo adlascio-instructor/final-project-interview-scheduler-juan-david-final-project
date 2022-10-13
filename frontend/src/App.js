@@ -1,40 +1,52 @@
 import React, { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 
 import "./App.scss";
 
 import DayList from "./components/DayList";
 import Appointment from "./components/Appointment";
 
+const socket = io("http://localhost:8080");
+
 export default function Application() {
 	const [day, setDay] = useState("Monday");
 	const [days, setDays] = useState("");
 	const [appointments, setAppointments] = useState({});
 
-	useEffect(() => {
-		const formattedData = {};
-		fetch(`http://localhost:8000/appointments/${day}`)
-			.then((result) => result.json())
-			.then((data) => {
-				// console.log(data)
-				data.forEach((appointment) => {
-					formattedData[appointment.id] = {
-						id: appointment.id,
-						time: appointment.time,
-						interview: appointment.student
-							? {
-									student: appointment.student,
-									interviewer: {
-										id: appointment.interviewer_id,
-										name: appointment.interviewer,
-										avatar: appointment.avatar,
-									},
-							  }
-							: null,
-					};
-				});
-				setAppointments(formattedData);
-			});
-	}, [day]);
+  useEffect(() => {
+    socket.on("get-appointments", (obj) => {
+      console.log("new data received");
+      if (obj.day === day) {
+        console.log(obj.day, day);
+        setAppointments(obj.appointments);
+      }
+    });
+  }, [day]);
+
+  useEffect(() => {
+    const formattedData = {};
+    fetch(`http://localhost:8000/appointments/${day}`)
+      .then((result) => result.json())
+      .then((data) => {
+        data.forEach((appointment) => {
+          formattedData[appointment.id] = {
+            id: appointment.id,
+            time: appointment.time,
+            interview: appointment.student
+              ? {
+                  student: appointment.student,
+                  interviewer: {
+                    id: appointment.interviewer_id,
+                    name: appointment.interviewer,
+                    avatar: appointment.avatar,
+                  },
+                }
+              : null,
+          };
+        });
+        setAppointments(formattedData);
+      });
+  }, [day]);
 
 	useEffect(() => {
 		const daysObj = {};
@@ -60,51 +72,40 @@ export default function Application() {
 			});
 	}, []);
 
-	useEffect(() => {
-		const urlDays = "http://localhost:8000/days";
+  function bookInterview(id, interview) {
+    console.log(id, interview);
+    const isEdit = appointments[id].interview;
 
-		const fetchDays = async () => {
-			try {
-				const response = await fetch(urlDays);
-				const json = await response.json();
-				setDays(json);
-			} catch (error) {
-				console.log("error", error);
-			}
-		};
-		fetchDays();
-	}, []);
+    setAppointments((prev) => {
+      const appointment = {
+        ...prev[id],
+        interview: { ...interview },
+      };
+      const appointments = {
+        ...prev,
+        [id]: appointment,
+      };
+      socket.emit("send-appoinments", {
+        appointments,
+        day,
+      });
+      return appointments;
+    });
 
-	function bookInterview(id, interview) {
-		console.log(id, interview);
-		const isEdit = appointments[id].interview;
-
-		setAppointments((prev) => {
-			const appointment = {
-				...prev[id],
-				interview: { ...interview },
-			};
-			const appointments = {
-				...prev,
-				[id]: appointment,
-			};
-			return appointments;
-		});
-
-		if (!isEdit) {
-			setDays((prev) => {
-				const updatedDay = {
-					...prev[day],
-					spots: prev[day].spots - 1,
-				};
-				const days = {
-					...prev,
-					[day]: updatedDay,
-				};
-				return days;
-			});
-		}
-	}
+    if (!isEdit) {
+      setDays((prev) => {
+        const updatedDay = {
+          ...prev[day],
+          spots: prev[day].spots - 1,
+        };
+        const days = {
+          ...prev,
+          [day]: updatedDay,
+        };
+        return days;
+      });
+    }
+  }
 
 	function cancelInterview(id) {
 		fetch("http://localhost:8000/deleteAppointment", {
