@@ -6,7 +6,7 @@
 
 CREATE TABLE days (
     id SERIAL PRIMARY KEY,
-    name TEXT
+    name TEXT,
 );
 
 CREATE TABLE appointments (
