@@ -9,13 +9,13 @@ import Appointment from "./components/Appointment";
 const socket = io("http://localhost:8080");
 
 export default function Application() {
-	const [day, setDay] = useState("Monday");
-	const [days, setDays] = useState("");
-	const [appointments, setAppointments] = useState({});
+  const [day, setDay] = useState("Monday");
+  const [days, setDays] = useState("");
+  const [appointments, setAppointments] = useState({});
 
   useEffect(() => {
     socket.on("get-appointments", (obj) => {
-      console.log("new data received");
+      console.log("new data received", obj);
       if (obj.day === day) {
         console.log(obj.day, day);
         setAppointments(obj.appointments);
@@ -48,29 +48,31 @@ export default function Application() {
       });
   }, [day]);
 
-	useEffect(() => {
-		const daysObj = {};
-		fetch(`http://localhost:8000/remainingSpots`)
-			.then((result) => result.json())
-			.then((data) => {
-				let count = {
-					Monday: 0,
-					Tuesday: 0,
-					Wednesday: 0,
-					Thursday: 0,
-					Friday: 0,
-				};
-				data.forEach((day) => {
-					count[day.day_name] += 1;
-					daysObj[day.day_name] = {
-						id: day.day_id,
-						name: day.day_name,
-						spots: 5 - count[day.day_name],
-					};
-				});
-				setDays(daysObj);
-			});
-	}, []);
+  useEffect(() => {
+    const daysObj = {};
+    fetch(`http://localhost:8000/remainingSpots`)
+      .then((result) => result.json())
+      .then((data) => {
+        let count = {
+          Monday: 0,
+          Tuesday: 0,
+          Wednesday: 0,
+          Thursday: 0,
+          Friday: 0,
+        };
+        data.forEach((day) => {
+          if (day.student) {
+            count[day.day_name] += 1;
+          }
+          daysObj[day.day_name] = {
+            id: day.day_id,
+            name: day.day_name,
+            spots: 5 - count[day.day_name],
+          };
+        });
+        setDays(daysObj);
+      });
+  }, [appointments]);
 
   function bookInterview(id, interview) {
     console.log(id, interview);
@@ -88,6 +90,7 @@ export default function Application() {
       socket.emit("send-appoinments", {
         appointments,
         day,
+        spots: days[day].spots,
       });
       return appointments;
     });
@@ -146,36 +149,36 @@ export default function Application() {
       return days;
     });
   }
-  
-	return (
-		<main className="layout">
-			<section className="sidebar">
-				<img
-					className="sidebar--centered"
-					src="images/logo.png"
-					alt="Interview Scheduler"
-				/>
-				<hr className="sidebar__separator sidebar--centered" />
-				<nav className="sidebar__menu">
-					<DayList days={days} value={day} onChange={setDay} />
-				</nav>
-			</section>
-			<section className="schedule">
-				{Object.values(appointments).map((appointment) => (
-					<Appointment
-						day={day}
-						key={appointment.id}
-						time={appointment.time}
-						id={appointment.id}
-						interview={appointment.interview || null}
-						bookInterview={(interview) =>
-							bookInterview(appointment.id, interview)
-						}
-						cancelInterview={cancelInterview}
-					/>
-				))}
-				<Appointment key="last" time="5pm" />
-			</section>
-		</main>
-	);
+
+  return (
+    <main className="layout">
+      <section className="sidebar">
+        <img
+          className="sidebar--centered"
+          src="images/logo.png"
+          alt="Interview Scheduler"
+        />
+        <hr className="sidebar__separator sidebar--centered" />
+        <nav className="sidebar__menu">
+          <DayList days={days} value={day} onChange={setDay} />
+        </nav>
+      </section>
+      <section className="schedule">
+        {Object.values(appointments).map((appointment) => (
+          <Appointment
+            day={day}
+            key={appointment.id}
+            time={appointment.time}
+            id={appointment.id}
+            interview={appointment.interview || null}
+            bookInterview={(interview) =>
+              bookInterview(appointment.id, interview)
+            }
+            cancelInterview={cancelInterview}
+          />
+        ))}
+        <Appointment key="last" time="5pm" />
+      </section>
+    </main>
+  );
 }
