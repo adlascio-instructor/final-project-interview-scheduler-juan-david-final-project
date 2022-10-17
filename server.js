@@ -12,9 +12,14 @@ const io = require("socket.io")(8080, {
 
 io.on("connection", (socket) => {
   console.log(socket.id);
-  socket.on("send-appoinments", (obj) => {
-    console.log(obj);
-    socket.broadcast.emit("get-appointments", obj);
+  socket.on("book-interview", (obj) => {
+    console.log('on server-side book appointment socket')
+    console.log(obj)
+    io.emit("book-interview", obj);
+  });
+
+  socket.on("cancel-interview", (data) => {
+    io.emit("cancel-interview", data);
   });
 });
 

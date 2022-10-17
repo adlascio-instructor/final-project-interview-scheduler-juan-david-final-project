@@ -44,7 +44,11 @@ const Appointment = (props) => {
             message={"Are you sure you want to delete?"}
             onCancel={() => setIsDeleting(false)}
             onConfirm={() => {
-              props.cancelInterview(props.id);
+              props.socket.emit('cancel-interview', {
+                appointment_id: props.id,
+                day: props.day, 
+              })
+              // props.cancelInterview(props.id);
               setIsDeleting(false);
             }}
           />
