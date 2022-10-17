@@ -14,7 +14,7 @@ io.on("connection", (socket) => {
   console.log(socket.id);
   socket.on("book-interview", (obj) => {
     console.log('on server-side book appointment socket')
-    // console.log(obj)
+    console.log(obj)
     io.emit("book-interview", obj);
   });
 

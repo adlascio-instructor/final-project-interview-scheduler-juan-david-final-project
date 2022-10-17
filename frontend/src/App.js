@@ -28,6 +28,7 @@ export default function Application() {
         };
         return days;
       });
+
       console.log("on cancel interviews socket");
       if (appointments[appointment_id]) {
         cancelInterview(appointment_id);
@@ -36,10 +37,12 @@ export default function Application() {
 
     socket.on("book-interview", (data) => {
       const { appointment_id, interview, day } = data;
-      console.log(appointments);
       const isEdit = appointments[appointment_id].interview;
+      console.log("on book interviews socket");
 
-      // if (!isEdit) {
+
+      console.log(data);
+      if (!isEdit) {
         setDays((prev) => {
           const updatedDay = {
             ...prev[day],
@@ -51,10 +54,9 @@ export default function Application() {
           };
           return days;
         });
-      // }
+      }
 
       if (appointments[appointment_id]) {
-        console.log("book interview called");
         bookInterview(appointment_id, interview);
       }
     });
@@ -207,8 +209,8 @@ export default function Application() {
               (interview) => {
                 socket.emit("book-interview", {
                   appointment_id: appointment.id,
-                  day,
                   interview,
+                  day,
                 });
               }
               // bookInterview(appointment.id, interview)
