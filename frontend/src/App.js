@@ -14,14 +14,56 @@ export default function Application() {
   const [appointments, setAppointments] = useState({});
 
   useEffect(() => {
-    socket.on("get-appointments", (obj) => {
-      console.log("new data received", obj);
-      if (obj.day === day) {
-        console.log(obj.day, day);
-        setAppointments(obj.appointments);
+    socket.on("cancel-interview", (data) => {
+      const { appointment_id, day } = data;
+
+      setDays((prev) => {
+        const updatedDay = {
+          ...prev[day],
+          spots: prev[day].spots + 1,
+        };
+        const days = {
+          ...prev,
+          [day]: updatedDay,
+        };
+        return days;
+      });
+      console.log("on cancel interviews socket");
+      if (appointments[appointment_id]) {
+        cancelInterview(appointment_id);
       }
     });
-  }, [day]);
+
+    socket.on("book-interview", (data) => {
+      const { appointment_id, interview, day } = data;
+      console.log(appointments);
+      const isEdit = appointments[appointment_id].interview;
+
+      // if (!isEdit) {
+        setDays((prev) => {
+          const updatedDay = {
+            ...prev[day],
+            spots: prev[day].spots - 1,
+          };
+          const days = {
+            ...prev,
+            [day]: updatedDay,
+          };
+          return days;
+        });
+      // }
+
+      if (appointments[appointment_id]) {
+        console.log("book interview called");
+        bookInterview(appointment_id, interview);
+      }
+    });
+
+    return () => {
+      socket.off("cancel-interview");
+      socket.off("book-interview");
+    };
+  }, [day, appointments]);
 
   useEffect(() => {
     const formattedData = {};
@@ -54,29 +96,28 @@ export default function Application() {
       .then((result) => result.json())
       .then((data) => {
         let count = {
-          Monday: 0,
-          Tuesday: 0,
-          Wednesday: 0,
-          Thursday: 0,
-          Friday: 0,
+          Monday: 5,
+          Tuesday: 5,
+          Wednesday: 5,
+          Thursday: 5,
+          Friday: 5,
         };
         data.forEach((day) => {
           if (day.student) {
-            count[day.day_name] += 1;
+            count[day.day_name] -= 1;
           }
           daysObj[day.day_name] = {
             id: day.day_id,
             name: day.day_name,
-            spots: 5 - count[day.day_name],
+            spots: count[day.day_name],
           };
         });
         setDays(daysObj);
       });
-  }, [appointments]);
+  }, [day]);
 
   function bookInterview(id, interview) {
     console.log(id, interview);
-    const isEdit = appointments[id].interview;
 
     setAppointments((prev) => {
       const appointment = {
@@ -87,27 +128,22 @@ export default function Application() {
         ...prev,
         [id]: appointment,
       };
-      socket.emit("send-appoinments", {
-        appointments,
-        day,
-        spots: days[day].spots,
-      });
       return appointments;
     });
 
-    if (!isEdit) {
-      setDays((prev) => {
-        const updatedDay = {
-          ...prev[day],
-          spots: prev[day].spots - 1,
-        };
-        const days = {
-          ...prev,
-          [day]: updatedDay,
-        };
-        return days;
-      });
-    }
+    // if (!isEdit) {
+    // setDays((prev) => {
+    //   const updatedDay = {
+    //     ...prev[day],
+    //     spots: prev[day].spots - 1,
+    //   };
+    //   const days = {
+    //     ...prev,
+    //     [day]: updatedDay,
+    //   };
+    //   return days;
+    // });
+    // }
   }
 
   function cancelInterview(id) {
@@ -130,24 +166,20 @@ export default function Application() {
         ...prev,
         [id]: updatedAppointment,
       };
-      socket.emit("send-appoinments", {
-        appointments,
-        day,
-      });
       return appointments;
     });
 
-    setDays((prev) => {
-      const updatedDay = {
-        ...prev[day],
-        spots: prev[day].spots + 1,
-      };
-      const days = {
-        ...prev,
-        [day]: updatedDay,
-      };
-      return days;
-    });
+    // setDays((prev) => {
+    //   const updatedDay = {
+    //     ...prev[day],
+    //     spots: prev[day].spots + 1,
+    //   };
+    //   const days = {
+    //     ...prev,
+    //     [day]: updatedDay,
+    //   };
+    //   return days;
+    // });
   }
 
   return (
@@ -171,10 +203,18 @@ export default function Application() {
             time={appointment.time}
             id={appointment.id}
             interview={appointment.interview || null}
-            bookInterview={(interview) =>
-              bookInterview(appointment.id, interview)
+            bookInterview={
+              (interview) => {
+                socket.emit("book-interview", {
+                  appointment_id: appointment.id,
+                  day,
+                  interview,
+                });
+              }
+              // bookInterview(appointment.id, interview)
             }
             cancelInterview={cancelInterview}
+            socket={socket}
           />
         ))}
         <Appointment key="last" time="5pm" />
